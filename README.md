@@ -43,9 +43,8 @@ The installer appends a marker-guarded block to your rc file that sources `ai-sh
 ~/.ai-shell/install.sh --all    # both
 ```
 
-`~/.ai-shell` is only a suggestion — `install.sh` works out its own location, so the
-clone can live anywhere. Conversation state lives in `~/.ai-shell` either way, so if
-you do clone there, one directory holds everything (the state files are gitignored).
+`~/.ai-shell` holds everything — the code and your conversation state (the state
+files are gitignored, so updates stay clean).
 
 Re-running is safe (the block is replaced, not duplicated). Then open a new shell, or:
 

@@ -6,9 +6,7 @@
 #
 # Config (set before sourcing, or export any time):
 #   ASK_MODEL  model for one-shot answers (default: opus)
-#   ASK_DIR    state directory for conversation threads (default: ~/.ai-shell).
-#              A fixed path, not the clone's location: if you clone to
-#              ~/.ai-shell the two coincide and one directory holds everything.
+#   ASK_DIR    state directory for conversation threads (default: ~/.ai-shell)
 
 : "${ASK_DIR:=$HOME/.ai-shell}"
 : "${ASK_MODEL:=opus}"
