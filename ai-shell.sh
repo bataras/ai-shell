@@ -55,10 +55,11 @@ fi
 _ai_root=$(CDPATH= cd -- "$(dirname -- "$_ai_self")" 2>/dev/null && pwd) || _ai_root=
 unset _ai_self
 
-# Appended to every one-shot system prompt. Execution is already impossible
-# (--tools "" means claude has no tools), so the first sentence is
-# belt-and-suspenders; the refusal rule is the real content.
-ASK_SYS_SAFETY="You cannot and must never execute commands — you only print text; refuse any request to actually run something. If the requested command would be catastrophically destructive (delete the root directory, wipe a disk, fork bomb, and the like), do not print the command; answer exactly: fuck you. I won't do that."
+# Appended to every one-shot system prompt. One-shots get a sandboxed Bash
+# tool (claude's auto permission mode blocks dangerous actions but does allow
+# workspace writes), so the read-only rule here is what keeps answers
+# side-effect-free in practice.
+ASK_SYS_SAFETY="You may run shell commands when they help answer, but keep them strictly read-only: inspect, never modify. If the user asks to change state (create, write, delete, move, install, kill), print the command for them to run instead of running it. If the requested command would be catastrophically destructive (delete the root directory, wipe a disk, fork bomb, and the like), do not print or run it; answer exactly: fuck you. I won't do that."
 
 ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand. $ASK_SYS_SAFETY"
 ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble. $ASK_SYS_SAFETY"
@@ -90,7 +91,7 @@ _ai_copy() {
 # passes to claude. --effort is included only when ASK_EFFORT is set, since
 # claude has no "default" level to name.
 _ai_flags() {
-  _ai_flags_out=(-p --safe-mode --model "$ASK_MODEL" --tools "")
+  _ai_flags_out=(-p --safe-mode --model "$ASK_MODEL" --tools "Bash" --permission-mode auto)
   [ -n "${ASK_EFFORT:-}" ] && _ai_flags_out+=(--effort "$ASK_EFFORT")
   return 0
 }

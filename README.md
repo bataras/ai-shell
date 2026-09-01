@@ -223,7 +223,7 @@ Environment variables, settable per-invocation or exported:
 ASK_MODEL=sonnet ask "quick one: default ssh port?"
 ```
 
-The functions call `claude` with `--safe-mode` and `--tools ""`: no tools run, and none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast, cheap, and side-effect-free. `af` with no arguments opens a normal interactive session with your full setup.
+The functions call `claude` with `--safe-mode`, so none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast and cheap. One-shots do get a shell (`--tools "Bash"` under the sandboxed `auto` permission mode), so `ask list the current folder` actually looks; the system prompt holds it to read-only inspection — anything state-changing is printed for you to run, not run. `af` with no arguments opens a normal interactive session with your full setup.
 
 ## Releasing
 
