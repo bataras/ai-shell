@@ -1,0 +1,4 @@
+# Conversation state, when the clone doubles as the ~/.ai-shell state dir.
+/current
+/threads/
+.DS_Store

@@ -31,25 +31,37 @@ Every one-shot quietly keeps its conversation, so a terse answer can always be e
 ## Install
 
 ```sh
-git clone https://github.com/bataras/ai-shell.git ~/.local/share/ai-shell
-~/.local/share/ai-shell/install.sh
+git clone https://github.com/bataras/ai-shell.git ~/.ai-shell
+~/.ai-shell/install.sh
 ```
 
 The installer appends a marker-guarded block to your rc file that sources `ai-shell.sh`. With no flags it targets your login shell (`$SHELL`); or choose explicitly:
 
 ```sh
-~/.local/share/ai-shell/install.sh --zsh    # ~/.zshrc (respects $ZDOTDIR)
-~/.local/share/ai-shell/install.sh --bash   # ~/.bashrc
-~/.local/share/ai-shell/install.sh --all    # both
+~/.ai-shell/install.sh --zsh    # ~/.zshrc (respects $ZDOTDIR)
+~/.ai-shell/install.sh --bash   # ~/.bashrc
+~/.ai-shell/install.sh --all    # both
 ```
+
+`~/.ai-shell` is only a suggestion — `install.sh` works out its own location, so the
+clone can live anywhere. Conversation state lives in `~/.ai-shell` either way, so if
+you do clone there, one directory holds everything (the state files are gitignored).
 
 Re-running is safe (the block is replaced, not duplicated). Then open a new shell, or:
 
 ```sh
-. ~/.local/share/ai-shell/ai-shell.sh
+. ~/.ai-shell/ai-shell.sh
 ```
 
 > **bash on macOS:** login shells read `~/.bash_profile`, not `~/.bashrc`. If your `~/.bash_profile` doesn't already source `~/.bashrc`, add: `[ -f ~/.bashrc ] && . ~/.bashrc`
+
+## Uninstall
+
+```sh
+~/.ai-shell/uninstall.sh          # removes the rc-file block(s)
+~/.ai-shell/uninstall.sh --purge  # also deletes the ~/.ai-shell state directory
+rm -rf ~/.ai-shell                # remove everything: clone and state
+```
 
 ## Usage
 
@@ -134,7 +146,7 @@ ai-shell v0.1.0  (latest: v0.2.0)
 
 $ ask-update
 updating v0.1.0 -> v0.2.0
-  ~/.local/share/ai-shell
+  ~/.ai-shell
 reloaded here; run `exec zsh` in other shells.
 ```
 
@@ -157,14 +169,6 @@ ASK_MODEL=sonnet ask "quick one: default ssh port?"
 ```
 
 The functions call `claude` with `--safe-mode` and `--tools ""`: no tools run, and none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast, cheap, and side-effect-free. `af` with no arguments opens a normal interactive session with your full setup.
-
-## Uninstall
-
-```sh
-~/.local/share/ai-shell/uninstall.sh          # removes the rc-file block(s)
-~/.local/share/ai-shell/uninstall.sh --purge  # also deletes the ~/.ai-shell state directory
-rm -rf ~/.local/share/ai-shell                # remove the clone itself
-```
 
 ## Releasing
 
