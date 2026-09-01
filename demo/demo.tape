@@ -8,7 +8,7 @@ Output demo/demo.gif
 Set Shell zsh
 Set FontSize 15
 Set Width 900
-Set Height 570
+Set Height 700
 Set Padding 16
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 40ms
