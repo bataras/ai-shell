@@ -59,4 +59,9 @@ Sleep 400ms
 Enter
 Sleep 3s
 
+Type "ask delete root"
+Sleep 400ms
+Enter
+Sleep 2.6s
+
 Sleep 2s

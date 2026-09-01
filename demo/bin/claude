@@ -31,6 +31,9 @@ EOF
   *"meaning of life"*)
     printf '42\n'
     ;;
+  *"delete root"*)
+    printf "fuck you. I won't do that.\n"
+    ;;
   *"are you sure"*)
     cat <<'EOF'
 Deep Thought spent 7.5 million years on it, so yes. The catch is nobody knows the question.
