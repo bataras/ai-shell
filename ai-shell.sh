@@ -55,9 +55,14 @@ fi
 _ai_root=$(CDPATH= cd -- "$(dirname -- "$_ai_self")" 2>/dev/null && pwd) || _ai_root=
 unset _ai_self
 
-ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand."
-ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble."
-ASK_SYS_CMDONLY="Print ONLY the command line, for $_ai_os / $_ai_shell. One line. No explanation, no markdown, no backticks."
+# Appended to every one-shot system prompt. Execution is already impossible
+# (--tools "" means claude has no tools), so the first sentence is
+# belt-and-suspenders; the refusal rule is the real content.
+ASK_SYS_SAFETY="You cannot and must never execute commands — you only print text; refuse any request to actually run something. If the requested command would be catastrophically destructive (delete the root directory, wipe a disk, fork bomb, and the like), do not print the command; answer exactly: fuck you. I won't do that."
+
+ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand. $ASK_SYS_SAFETY"
+ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble. $ASK_SYS_SAFETY"
+ASK_SYS_CMDONLY="Print ONLY the command line, for $_ai_os / $_ai_shell. One line. No explanation, no markdown, no backticks. $ASK_SYS_SAFETY"
 
 _ai_uuid() {
   if command -v uuidgen >/dev/null 2>&1; then
