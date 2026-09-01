@@ -42,7 +42,7 @@ Treats unset variables as an error and exits instead of silently substituting em
 $ ask when will AGI occur in one line
 Nobody knows — expert forecasts cluster loosely around 2030–2060, with wide error bars and no agreed definition of "AGI," so treat any specific date as marketing rather than prediction.
 
-$ ask ask what is the meaning of life, the universe and everything
+$ ask what is the meaning of life, the universe and everything
 42
 
 $ af "are you sure?"
