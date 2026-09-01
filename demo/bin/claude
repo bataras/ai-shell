@@ -1,0 +1,37 @@
+#!/bin/sh
+# Demo stand-in for the `claude` CLI, used only by demo/demo.tape (via
+# demo/setup.sh putting this directory first in PATH). It replays answers
+# captured from real ai-shell sessions, after a short delay, so the demo GIF
+# renders quickly and deterministically. Not installed; not part of ai-shell.
+
+# The prompt is the last argument ai-shell passes.
+for last; do :; done
+
+sleep 1.3
+
+case $last in
+  *"fetch main"*)
+    cat <<'EOF'
+git fetch origin main:main
+Fast-forwards your local main from origin without checking it out (fails harmlessly if it would be a non-fast-forward).
+EOF
+    ;;
+  *"main:main"*)
+    cat <<'EOF'
+It's a refspec: `<source>:<destination>`. Source is `main` on the remote, destination is your local `main`.
+
+So: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward.
+EOF
+    ;;
+  *tarball*)
+    cat <<'EOF'
+tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .
+EOF
+    ;;
+  *"meaning of life"*)
+    printf '42\n'
+    ;;
+  *)
+    printf 'ai-shell demo shim: no canned answer for this prompt\n'
+    ;;
+esac

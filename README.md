@@ -2,6 +2,8 @@
 
 Quick AI answers from Claude at the shell prompt — without opening an interactive session — plus the ability to **follow up** when one answer isn't enough.
 
+![ai-shell demo](demo/demo.gif)
+
 ## Usage
 
 ### What's that command?
