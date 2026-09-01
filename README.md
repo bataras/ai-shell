@@ -48,6 +48,19 @@ Re-running is safe (the block is replaced, not duplicated). Then open a new shel
 
 ## Usage
 
+The core loop — a terse answer, then a follow-up that keeps the context:
+
+```
+$ howto fetch main while on this branch
+git fetch origin main:main
+Fast-forwards your local main from origin without checking it out (fails harmlessly if it would be a non-fast-forward).
+
+$ af what does main:main mean
+It's a refspec: `<source>:<destination>`. Source is `main` on the remote (`refs/heads/main` on origin), destination is your local `main` (`refs/heads/main`).
+
+So it says: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward (unless you prefix with `+`, e.g. `+main:main`), and it refuses outright if `main` is the currently checked-out branch.
+```
+
 ### One-shot answers
 
 ```
