@@ -30,7 +30,7 @@ jobs:
       - name: Check every command is defined
         run: |
           set -eu
-          fns='ask howto howtoc af askt ask-version ask-update'
+          fns='ask howto howtoc af askt ask-version ask-update ask-help'
           bash -c '. ./ai-shell.sh; for f in '"$fns"'; do
             typeset -f "$f" >/dev/null || { echo "bash: missing $f" >&2; exit 1; }
           done; echo "bash ok"'

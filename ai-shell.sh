@@ -129,6 +129,26 @@ askt() {
   _ask_send "$ASK_DIR/threads/$name" "$ASK_SYS_CHAT" "askt $name" "$*"
 }
 
+# ask-help — the command list, straight from the README's table so it can't drift.
+ask-help() {
+  local readme=${_ai_root:+$_ai_root/README.md}
+  if [ -z "$readme" ] || [ ! -r "$readme" ]; then
+    printf 'ask-help: README.md not found in %s\n' "${_ai_root:-<unknown>}" >&2
+    return 1
+  fi
+  awk -F'|' '
+    /^\|/ {
+      if (++n <= 2) next                 # header and separator rows
+      cmd=$2; desc=$3
+      gsub(/`|\*\*/, "", cmd); gsub(/`|\*\*/, "", desc)
+      gsub(/^ +| +$/, "", cmd); gsub(/^ +| +$/, "", desc)
+      printf "  %-26s %s\n", cmd, desc
+      next
+    }
+    n { exit }                           # first table only
+  ' "$readme"
+}
+
 # --- version & updates -------------------------------------------------------
 # Versions are git tags; the checkout is the source of truth, so there's no
 # version constant here to drift out of sync with the tags.

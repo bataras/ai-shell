@@ -17,6 +17,7 @@ Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.
 | `askt` (no args) | List named threads, most recently used first |
 | `ask-version` | Show the installed version, and the newest release available |
 | `ask-update` | Update the checkout to the newest release |
+| `ask-help` | Show this command list |
 
 Every one-shot quietly keeps its conversation, so a terse answer can always be expanded, questioned, or taken interactive — nothing is lost by asking tersely first.
 
