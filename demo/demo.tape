@@ -8,7 +8,7 @@ Output demo/demo.gif
 Set Shell zsh
 Set FontSize 15
 Set Width 900
-Set Height 430
+Set Height 510
 Set Padding 16
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 40ms
@@ -38,6 +38,16 @@ Sleep 2.6s
 Type "# ^ already on the clipboard"
 Sleep 1.6s
 Enter
+
+Type "ask-set-model"
+Sleep 400ms
+Enter
+Sleep 1.8s
+
+Type "ask-set-model opus high"
+Sleep 400ms
+Enter
+Sleep 1.8s
 
 Type "ask what is the meaning of life, the universe and everything"
 Sleep 400ms
