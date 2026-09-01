@@ -21,7 +21,7 @@ It's a refspec: `<source>:<destination>`. Source is `main` on the remote (`refs/
 So it says: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward (unless you prefix with `+`, e.g. `+main:main`), and it refuses outright if `main` is the currently checked-out branch.
 ```
 
-### What's that command?.. in the clipboard
+### Give me that command in the clipboard
 `howtoc` puts the command on your clipboard, ready to paste.
 
 ```
