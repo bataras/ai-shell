@@ -2,6 +2,8 @@
 
 Quick AI answers at the shell prompt — without opening an interactive session — plus the ability to **follow up** when one answer isn't enough.
 
+Uses Claude.
+
 Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.com/claude-code) CLI:
 
 | Command | What it does |
