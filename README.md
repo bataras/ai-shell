@@ -132,8 +132,7 @@ Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.
 
 | Command | What it does |
 |---|---|
-| `ask <question>` | Terse general answer; starts a fresh conversation. Read-only — never changes the filesystem |
-| `askw <question>` | Like `ask`, but allowed to act on the filesystem — guarded, touching only what you name |
+| `ask <question>` | Terse general answer; starts a fresh conversation |
 | `howto <task>` | The command line for a task, plus one explanation line |
 | `howtoc <task>` | The command line **only**, echoed and copied to your clipboard |
 | `af <question>` | **Follow up** on the last answer, whichever command produced it |
@@ -224,7 +223,7 @@ Environment variables, settable per-invocation or exported:
 ASK_MODEL=sonnet ask "quick one: default ssh port?"
 ```
 
-The functions call `claude` with `--safe-mode`, so none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast and cheap. One-shots do get a shell (`--tools "Bash"` under the sandboxed `auto` permission mode), so `ask list the current folder` actually looks. `ask` is held to read-only inspection — anything state-changing is printed for you to run, not run — while `askw` may create, modify, or delete what your request names, under a sanity guard (smallest change, current directory tree only). `af` with no arguments opens a normal interactive session with your full setup.
+**ai-shell is read-only — it never mutates anything.** One-shots do get a shell so they can *look* (`ask list the current folder` actually lists it), but it runs under claude's `plan` permission mode, which mechanically denies any mutating command — this is enforced, not just prompted. Anything state-changing you ask for is printed for you to run yourself. The functions also pass `--safe-mode`, so none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast and cheap. `af` with no arguments opens a normal interactive session with your full setup, including its normal ability to act.
 
 ## Releasing
 
