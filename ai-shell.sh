@@ -55,15 +55,24 @@ fi
 _ai_root=$(CDPATH= cd -- "$(dirname -- "$_ai_self")" 2>/dev/null && pwd) || _ai_root=
 unset _ai_self
 
-# Appended to every one-shot system prompt. One-shots get a sandboxed Bash
-# tool (claude's auto permission mode blocks dangerous actions but does allow
-# workspace writes), so the read-only rule here is what keeps answers
-# side-effect-free in practice.
-ASK_SYS_SAFETY="You may run shell commands when they help answer, but keep them strictly read-only: inspect, never modify. If the user asks to change state (create, write, delete, move, install, kill), print the command for them to run instead of running it. If the requested command would be catastrophically destructive (delete the root directory, wipe a disk, fork bomb, and the like), do not print or run it; answer exactly: fuck you. I won't do that."
+# One-shots get a sandboxed Bash tool (claude's auto permission mode blocks
+# dangerous actions but does allow workspace writes), so these prompt rules
+# are what separate the read-only commands from askw in practice.
+#
+# Catastrophe refusal, shared by every one-shot.
+ASK_SYS_REFUSE="If the requested command would be catastrophically destructive (delete the root directory, wipe a disk, fork bomb, and the like), do not print or run it; answer exactly: fuck you. I won't do that."
+# ask/af/askt: shell allowed, strictly read-only.
+ASK_SYS_RO="You may run shell commands when they help answer, but keep them strictly read-only: inspect, never modify the filesystem or system state. If the user asks to change state (create, write, delete, move, install, kill), print the command for them to run instead of running it. $ASK_SYS_REFUSE"
+# askw: writes allowed, with a sanity guard.
+ASK_SYS_RW="You may run shell commands, including ones that create, modify, or delete files, when that is what the user asks for. Sanity guard: stay inside the current directory tree, make the smallest change that satisfies the request, never touch more than the request clearly names, and say what you did. $ASK_SYS_REFUSE"
 
-ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand. $ASK_SYS_SAFETY"
-ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble. $ASK_SYS_SAFETY"
-ASK_SYS_CMDONLY="Print ONLY the command line, for $_ai_os / $_ai_shell. One line. No explanation, no markdown, no backticks. $ASK_SYS_SAFETY"
+_ai_sys_style="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand."
+ASK_SYS_CHAT="$_ai_sys_style $ASK_SYS_RO"
+ASK_SYS_CHATW="$_ai_sys_style $ASK_SYS_RW"
+unset _ai_sys_style
+# howto/howtoc print commands rather than act, so they carry only the refusal.
+ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble. $ASK_SYS_REFUSE"
+ASK_SYS_CMDONLY="Print ONLY the command line, for $_ai_os / $_ai_shell. One line. No explanation, no markdown, no backticks. $ASK_SYS_REFUSE"
 
 _ai_uuid() {
   if command -v uuidgen >/dev/null 2>&1; then
@@ -128,7 +137,12 @@ _ask_send() {
 }
 
 # ask <question> — terse general answer; starts a fresh conversation.
+# Read-only: it can look at the filesystem but never changes it.
 ask() { _ask_send - "$ASK_SYS_CHAT" ask "$*"; }
+
+# askw <question> — like ask, but allowed to act on the filesystem
+# (create/modify/delete what the request names), with a sanity guard.
+askw() { _ask_send - "$ASK_SYS_CHATW" askw "$*"; }
 
 # howto <task> — the command line for a task, plus one explanation line.
 howto() { _ask_send - "$ASK_SYS_CMD" howto "$*"; }
