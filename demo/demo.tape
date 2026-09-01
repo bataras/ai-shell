@@ -8,7 +8,7 @@ Output demo/demo.gif
 Set Shell zsh
 Set FontSize 15
 Set Width 900
-Set Height 510
+Set Height 570
 Set Padding 16
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 40ms
@@ -53,5 +53,10 @@ Type "ask what is the meaning of life, the universe and everything"
 Sleep 400ms
 Enter
 Sleep 2.4s
+
+Type `af "are you sure?"`
+Sleep 400ms
+Enter
+Sleep 3s
 
 Sleep 2s

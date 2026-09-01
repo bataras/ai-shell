@@ -31,6 +31,11 @@ EOF
   *"meaning of life"*)
     printf '42\n'
     ;;
+  *"are you sure"*)
+    cat <<'EOF'
+Deep Thought spent 7.5 million years on it, so yes. The catch is nobody knows the question.
+EOF
+    ;;
   *)
     printf 'ai-shell demo shim: no canned answer for this prompt\n'
     ;;
