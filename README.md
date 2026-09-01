@@ -13,6 +13,8 @@ Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.
 | `af` (no args) | Open the last conversation in the full interactive `claude` CLI |
 | `askt <name> <question>` | Ask in a named, long-lived thread (created on first use) |
 | `askt` (no args) | List named threads, most recently used first |
+| `ask-version` | Show the installed version, and the newest release available |
+| `ask-update` | Update the checkout to the newest release |
 
 Every one-shot quietly keeps its conversation, so a terse answer can always be expanded, questioned, or taken interactive — nothing is lost by asking tersely first.
 
@@ -20,28 +22,29 @@ Every one-shot quietly keeps its conversation, so a terse answer can always be e
 
 - **zsh or bash**
 - the **`claude` CLI** installed and logged in ([install instructions](https://code.claude.com/docs/en/quickstart))
+- **git** (the install is a clone; `ask-update` uses it)
 - macOS or Linux; `uuidgen` (preinstalled on macOS, `util-linux` on Linux)
 - for `howtoc`'s clipboard: `pbcopy` (macOS) or `wl-copy`/`xclip`/`xsel` (Linux)
 
 ## Install
 
 ```sh
-git clone https://github.com/bataras/ai-shell.git ~/.ai-shell
-~/.ai-shell/install.sh
+git clone https://github.com/bataras/ai-shell.git ~/.local/share/ai-shell
+~/.local/share/ai-shell/install.sh
 ```
 
 The installer appends a marker-guarded block to your rc file that sources `ai-shell.sh`. With no flags it targets your login shell (`$SHELL`); or choose explicitly:
 
 ```sh
-~/.ai-shell/install.sh --zsh    # ~/.zshrc (respects $ZDOTDIR)
-~/.ai-shell/install.sh --bash   # ~/.bashrc
-~/.ai-shell/install.sh --all    # both
+~/.local/share/ai-shell/install.sh --zsh    # ~/.zshrc (respects $ZDOTDIR)
+~/.local/share/ai-shell/install.sh --bash   # ~/.bashrc
+~/.local/share/ai-shell/install.sh --all    # both
 ```
 
 Re-running is safe (the block is replaced, not duplicated). Then open a new shell, or:
 
 ```sh
-. ~/.ai-shell/ai-shell.sh
+. ~/.local/share/ai-shell/ai-shell.sh
 ```
 
 > **bash on macOS:** login shells read `~/.bash_profile`, not `~/.bashrc`. If your `~/.bash_profile` doesn't already source `~/.bashrc`, add: `[ -f ~/.bashrc ] && . ~/.bashrc`
@@ -51,6 +54,10 @@ Re-running is safe (the block is replaced, not duplicated). Then open a new shel
 The core loop — a terse answer, then a follow-up that keeps the context:
 
 ```
+$ howto rule the world
+say "I now rule the world" && printf 'World status: RULED\n'
+Announces your dominion via macOS text-to-speech, then prints confirmation — harmless fun, since actual world domination isn't a shell command.
+
 $ howto fetch main while on this branch
 git fetch origin main:main
 Fast-forwards your local main from origin without checking it out (fails harmlessly if it would be a non-fast-forward).
@@ -114,6 +121,26 @@ rust
 
 `af` follows up on whatever ran last, including an `askt` thread.
 
+## Updating
+
+Versions are git tags, so the checkout is the source of truth — there's no version
+string in the source to drift out of sync.
+
+```
+$ ask-version
+ai-shell v0.1.0  (latest: v0.2.0)
+
+$ ask-update
+updating v0.1.0 -> v0.2.0
+  ~/.local/share/ai-shell
+reloaded here; run `exec zsh` in other shells.
+```
+
+`ask-update` leaves the checkout on the release tag (a detached HEAD — expected).
+It refuses to run if the install isn't a git clone, or if you have uncommitted
+changes to tracked files; untracked files of your own are left alone. Nothing
+checks for updates automatically — no startup network call, no nag.
+
 ## Configuration
 
 Environment variables, settable per-invocation or exported:
@@ -121,7 +148,7 @@ Environment variables, settable per-invocation or exported:
 | Variable | Default | Meaning |
 |---|---|---|
 | `ASK_MODEL` | `opus` | Model for answers (e.g. `sonnet` for faster/cheaper) |
-| `ASK_DIR` | `~/.ask` | Where conversation-thread state lives |
+| `ASK_DIR` | `~/.ai-shell` | Where conversation-thread state lives |
 
 ```sh
 ASK_MODEL=sonnet ask "quick one: default ssh port?"
@@ -132,10 +159,23 @@ The functions call `claude` with `--safe-mode` and `--tools ""`: no tools run, a
 ## Uninstall
 
 ```sh
-~/.ai-shell/uninstall.sh          # removes the rc-file block(s)
-~/.ai-shell/uninstall.sh --purge  # also deletes the ~/.ask state directory
-rm -rf ~/.ai-shell                # remove the clone itself
+~/.local/share/ai-shell/uninstall.sh          # removes the rc-file block(s)
+~/.local/share/ai-shell/uninstall.sh --purge  # also deletes the ~/.ai-shell state directory
+rm -rf ~/.local/share/ai-shell                # remove the clone itself
 ```
+
+## Releasing
+
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which syntax-checks
+the scripts under bash, zsh, and sh, confirms every command is defined in both
+shells, and then publishes a GitHub release with auto-generated notes.
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+A tag that fails the checks never becomes a release.
 
 ## Contributing
 

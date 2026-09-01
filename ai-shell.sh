@@ -6,14 +6,25 @@
 #
 # Config (set before sourcing, or export any time):
 #   ASK_MODEL  model for one-shot answers (default: opus)
-#   ASK_DIR    state directory for conversation threads (default: ~/.ask)
+#   ASK_DIR    state directory for conversation threads (default: ~/.ai-shell)
 
-: "${ASK_DIR:=$HOME/.ask}"
+: "${ASK_DIR:=$HOME/.ai-shell}"
 : "${ASK_MODEL:=opus}"
 
 # Bake the user's platform into the prompts so answers match their shell/OS.
 _ai_os=$(uname -sm 2>/dev/null || echo "unknown OS")
 if [ -n "${ZSH_VERSION:-}" ]; then _ai_shell=zsh; else _ai_shell=bash; fi
+
+# Absolute path of the directory holding this file, so ask-version/ask-update
+# can talk to the checkout we were sourced from. zsh's ${(%):-%x} is a parse
+# error under bash, so it has to go through eval rather than a plain branch.
+if [ -n "${ZSH_VERSION:-}" ]; then
+  eval '_ai_self=${(%):-%x}'
+else
+  _ai_self=${BASH_SOURCE[0]:-$0}
+fi
+_ai_root=$(CDPATH= cd -- "$(dirname -- "$_ai_self")" 2>/dev/null && pwd) || _ai_root=
+unset _ai_self
 
 ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand."
 ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble."
@@ -116,4 +127,84 @@ askt() {
     */*|.*) printf 'askt: bad thread name: %s\n' "$name" >&2; return 2 ;;
   esac
   _ask_send "$ASK_DIR/threads/$name" "$ASK_SYS_CHAT" "askt $name" "$*"
+}
+
+# --- version & updates -------------------------------------------------------
+# Versions are git tags; the checkout is the source of truth, so there's no
+# version constant here to drift out of sync with the tags.
+
+# _ai_git <args...> — run git against the checkout this file came from.
+_ai_git() {
+  [ -n "$_ai_root" ] || return 1
+  git -C "$_ai_root" "$@" 2>/dev/null
+}
+
+_ai_have_clone() {
+  _ai_git rev-parse --git-dir >/dev/null 2>&1
+}
+
+# Installed version: the exact tag when we're on one, otherwise a
+# tag-plus-distance like v0.1.0-3-gabc1234, or a bare sha before any tag.
+_ai_version_installed() {
+  _ai_git describe --tags --always --dirty
+}
+
+# Newest release tag on the remote. git sorts by version itself, so this
+# doesn't depend on `sort -V` (which BSD/macOS sort lacks).
+_ai_version_latest() {
+  _ai_git ls-remote --tags --refs --sort=-v:refname origin \
+    | head -1 | sed 's|.*refs/tags/||'
+}
+
+# ask-version — installed version, plus the newest release if the network answers.
+ask-version() {
+  local cur latest
+  if ! _ai_have_clone; then
+    printf 'ask-version: %s is not a git checkout\n' "${_ai_root:-<unknown>}" >&2
+    return 1
+  fi
+  cur=$(_ai_version_installed)
+  latest=$(_ai_version_latest)
+  if [ -z "$latest" ] || [ "$cur" = "$latest" ]; then
+    printf 'ai-shell %s\n' "$cur"
+  else
+    printf 'ai-shell %s  (latest: %s)\n' "$cur" "$latest"
+  fi
+}
+
+# ask-update — check for a newer release and check it out.
+ask-update() {
+  local cur latest
+  if ! _ai_have_clone; then
+    printf 'ask-update: %s is not a git clone; update it however you installed it\n' \
+      "${_ai_root:-<unknown>}" >&2
+    return 1
+  fi
+  # Tracked modifications only: untracked files are yours and harmless here.
+  if [ -n "$(_ai_git status --porcelain -uno)" ]; then
+    printf 'ask-update: %s has local changes; commit, stash, or discard them first\n' "$_ai_root" >&2
+    return 1
+  fi
+  _ai_git fetch --tags --quiet origin || {
+    printf 'ask-update: fetch failed\n' >&2
+    return 1
+  }
+  latest=$(_ai_version_latest)
+  if [ -z "$latest" ]; then
+    printf 'ask-update: no releases published yet\n' >&2
+    return 1
+  fi
+  cur=$(_ai_version_installed)
+  if [ "$cur" = "$latest" ]; then
+    printf 'ai-shell %s is already the latest\n' "$cur"
+    return 0
+  fi
+  printf 'updating %s -> %s\n' "$cur" "$latest"
+  _ai_git checkout --quiet "$latest" || {
+    printf 'ask-update: checkout of %s failed\n' "$latest" >&2
+    return 1
+  }
+  printf '  %s\n' "$_ai_root"
+  . "$_ai_root/ai-shell.sh"
+  printf 'reloaded here; run `exec %s` in other shells.\n' "$_ai_shell"
 }

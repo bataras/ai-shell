@@ -1,0 +1,44 @@
+name: release
+
+# Tag a commit to publish: git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install zsh
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
+
+      # ai-shell.sh is sourced by bash/zsh only; the installers are /bin/sh.
+      - name: Check syntax
+        run: |
+          set -eu
+          bash -n ai-shell.sh
+          zsh  -n ai-shell.sh
+          for f in install.sh uninstall.sh; do sh -n "$f"; done
+
+      - name: Check every command is defined
+        run: |
+          set -eu
+          fns='ask howto howtoc af askt ask-version ask-update'
+          bash -c '. ./ai-shell.sh; for f in '"$fns"'; do
+            typeset -f "$f" >/dev/null || { echo "bash: missing $f" >&2; exit 1; }
+          done; echo "bash ok"'
+          zsh -c '. ./ai-shell.sh; for f in '"$fns"'; do
+            typeset -f "$f" >/dev/null || { echo "zsh: missing $f" >&2; exit 1; }
+          done; echo "zsh ok"'
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
