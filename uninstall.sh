@@ -1,6 +1,6 @@
 #!/bin/sh
 # Uninstall ai-shell: removes the marker-guarded block from your rc files.
-# Usage: ./uninstall.sh [--purge]   (--purge also deletes the ~/.ask state dir)
+# Usage: ./uninstall.sh [--purge]   (--purge also deletes the ~/.ai-shell state dir)
 set -eu
 
 begin="# >>> ai-shell >>>"
@@ -19,8 +19,8 @@ for rc in "${ZDOTDIR:-$HOME}/.zshrc" "$HOME/.bashrc"; do
 done
 
 if [ "${1:-}" = --purge ]; then
-  rm -rf "${ASK_DIR:-$HOME/.ask}"
-  echo "removed ${ASK_DIR:-$HOME/.ask}"
+  rm -rf "${ASK_DIR:-$HOME/.ai-shell}"
+  echo "removed ${ASK_DIR:-$HOME/.ai-shell}"
 fi
 
 echo "Done. Open a new shell (already-loaded functions persist until then)."

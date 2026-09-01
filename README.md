@@ -56,6 +56,59 @@ $ af
 # opens `claude` resumed on that same conversation
 ```
 
+### Picking the model
+
+`ask-model` lists every model and effort level on offer, starring the ones in
+use:
+
+```
+$ ask-model
+models:
+    fable
+  * opus
+    sonnet
+    haiku
+efforts:
+    low
+    medium
+  * high
+    xhigh
+    max
+    default
+```
+
+`ask-set-model` changes them for the current shell. The effort level is
+optional and independent of the model:
+
+```
+$ ask-set-model sonnet
+model: sonnet   effort: high
+
+$ ask-set-model opus high
+model: opus   effort: high
+
+$ ask-set-model opus default    # hand the effort choice back to claude
+model: opus   effort: (claude default)
+```
+
+`ask-set-model` lasts only for the shell you run it in. To change every new
+terminal, use `ask-set-model-default` — it saves the choice to
+`~/.ai-shell/defaults` and applies it to the current shell too:
+
+```
+$ ask-set-model-default sonnet high
+model: sonnet   effort: high
+saved as the default for new shells in /Users/you/.ai-shell/defaults
+```
+
+It takes the same arguments as `ask-set-model`: omitting the effort keeps
+whatever was already saved, and `default` drops it so `claude` chooses.
+
+Precedence is environment first, then the saved default, then `opus`: a shell
+that exports its own `ASK_MODEL` / `ASK_EFFORT` (from your `.zshrc`, or from an
+`ask-set-model` in the parent shell) keeps that, and `ask-set-model-default`
+won't override it.
+
 ### Named threads
 
 For topics you return to across days, give the thread a name:
@@ -84,6 +137,9 @@ Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.
 | `af` (no args) | Open the last conversation in the full interactive `claude` CLI |
 | `askt <name> <question>` | Ask in a named, long-lived thread (created on first use) |
 | `askt` (no args) | List named threads, most recently used first |
+| `ask-model` | List the models and effort levels available, marking the ones in use |
+| `ask-set-model <model> [effort]` | Set the model, and optionally the effort level, for this shell |
+| `ask-set-model-default <model> [effort]` | Save the model/effort as the default for every new shell |
 | `ask-version` | Show the installed version, and the newest release available |
 | `ask-update` | Update the checkout to the newest release |
 | `ask-help` | Show this command list |

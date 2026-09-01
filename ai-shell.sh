@@ -4,12 +4,41 @@
 # Source this file from .zshrc or .bashrc (install.sh does it for you).
 # Requires the `claude` CLI (https://claude.com/claude-code), logged in.
 #
-# Config (set before sourcing, or export any time):
+# Config (set before sourcing, or export any time). These beat anything saved
+# by ask-set-model-default, so a shell that states its own model keeps it:
 #   ASK_MODEL  model for one-shot answers (default: opus)
-#   ASK_DIR    state directory for conversation threads (default: ~/.ai-shell)
+#   ASK_EFFORT effort level, low|medium|high|xhigh|max (default: claude's own)
+#   ASK_DIR    state directory for threads and saved defaults (default: ~/.ai-shell)
 
 : "${ASK_DIR:=$HOME/.ai-shell}"
+
+# _ai_read_defaults — load what ask-set-model-default saved into
+# _ai_def_model / _ai_def_effort, empty when there's nothing saved. Parsed
+# rather than sourced, so a mangled file can't run anything.
+_ai_read_defaults() {
+  _ai_def_model= _ai_def_effort=
+  [ -r "$ASK_DIR/defaults" ] || return 0
+  local k v
+  while read -r k v; do
+    case $k in
+      model)  _ai_def_model=$v ;;
+      effort) _ai_def_effort=$v ;;
+    esac
+  done < "$ASK_DIR/defaults"
+  return 0
+}
+
+_ai_read_defaults
+: "${ASK_MODEL:=$_ai_def_model}"
+: "${ASK_EFFORT:=$_ai_def_effort}"
 : "${ASK_MODEL:=opus}"
+
+# What ask-set-model accepts. The models are `claude --model` aliases, each of
+# which tracks the newest release in its family; the efforts are the full set
+# `claude --effort` takes. ASK_EFFORT is deliberately left unset by default so
+# claude applies its own.
+ASK_MODELS="fable opus sonnet haiku"
+ASK_EFFORTS="low medium high xhigh max"
 
 # Bake the user's platform into the prompts so answers match their shell/OS.
 _ai_os=$(uname -sm 2>/dev/null || echo "unknown OS")
@@ -52,6 +81,15 @@ _ai_copy() {
   fi
 }
 
+# _ai_flags — fill the global array _ai_flags_out with the flags every one-shot
+# passes to claude. --effort is included only when ASK_EFFORT is set, since
+# claude has no "default" level to name.
+_ai_flags() {
+  _ai_flags_out=(-p --safe-mode --model "$ASK_MODEL" --tools "")
+  [ -n "${ASK_EFFORT:-}" ] && _ai_flags_out+=(--effort "$ASK_EFFORT")
+  return 0
+}
+
 # _ask_send <thread-file|-> <system-prompt> <usage-name> <prompt...>
 # "-" = anonymous thread (fresh conversation). Either way the conversation
 # becomes "current", so `af` can follow up on it.
@@ -75,7 +113,8 @@ _ask_send() {
     sid=$(_ai_uuid) || return
     sess=(--session-id "$sid")
   fi
-  out=$(claude -p --safe-mode --model "$ASK_MODEL" --tools "" \
+  _ai_flags
+  out=$(claude "${_ai_flags_out[@]}" \
         --system-prompt "$sys" "${sess[@]}" "$*") || return
   [ "$f" != - ] && printf '%s\n' "$sid" >| "$f"
   printf '%s\n' "$sid" >| "$ASK_DIR/current"
@@ -109,7 +148,8 @@ af() {
     claude --resume "$sid"
     return
   fi
-  out=$(claude -p --safe-mode --model "$ASK_MODEL" --tools "" \
+  _ai_flags
+  out=$(claude "${_ai_flags_out[@]}" \
         --system-prompt "$ASK_SYS_CHAT" --resume "$sid" "$*") || return
   printf '%s\n' "$out"
 }
@@ -129,6 +169,97 @@ askt() {
   _ask_send "$ASK_DIR/threads/$name" "$ASK_SYS_CHAT" "askt $name" "$*"
 }
 
+# _ai_list <values> <current> — one space-separated value per line, with the
+# current one marked. Split via tr rather than a `for` loop: zsh doesn't
+# word-split unquoted expansions, so the loop form isn't portable.
+_ai_list() {
+  local cur=$2 v
+  printf '%s\n' "$1" | tr ' ' '\n' | while read -r v; do
+    [ -n "$v" ] || continue
+    if [ "$v" = "$cur" ]; then printf '  * %s\n' "$v"; else printf '    %s\n' "$v"; fi
+  done
+}
+
+# _ai_show_model — the one-line summary the setters echo back.
+_ai_show_model() {
+  printf 'model: %s   effort: %s\n' "$ASK_MODEL" "${ASK_EFFORT:-(claude default)}"
+}
+
+# ask-model — every model and effort level ask-set-model accepts, with the
+# ones in use starred.
+ask-model() {
+  printf 'models:\n'
+  _ai_list "$ASK_MODELS" "$ASK_MODEL"
+  printf 'efforts:\n'
+  _ai_list "$ASK_EFFORTS default" "${ASK_EFFORT:-default}"
+}
+
+# _ai_check_args <command-name> <model> [effort] — shared argument checking
+# for the two setters.
+_ai_check_args() {
+  local name=$1; shift
+  if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    printf 'usage: %s <%s> [%s|default]\n' "$name" \
+      "${ASK_MODELS// /|}" "${ASK_EFFORTS// /|}" >&2
+    return 2
+  fi
+  case " $ASK_MODELS " in
+    *" $1 "*) ;;
+    *) printf '%s: bad model: %s (%s)\n' "$name" "$1" "${ASK_MODELS// /|}" >&2
+       return 2 ;;
+  esac
+  if [ $# -eq 2 ] && [ "$2" != default ]; then
+    case " $ASK_EFFORTS " in
+      *" $2 "*) ;;
+      *) printf '%s: bad effort: %s (%s)\n' "$name" "$2" "${ASK_EFFORTS// /|}" >&2
+         return 2 ;;
+    esac
+  fi
+}
+
+# ask-set-model <model> [effort] — set the model, and optionally the effort
+# level, for this shell and anything it starts. An effort of "default" hands
+# the choice back to claude. Nothing is written to disk; use
+# ask-set-model-default for that.
+ask-set-model() {
+  _ai_check_args ask-set-model "$@" || return
+  export ASK_MODEL=$1
+  case ${2:-} in
+    '') ;;
+    default) unset ASK_EFFORT ;;
+    *) export ASK_EFFORT=$2 ;;
+  esac
+  _ai_show_model
+}
+
+# ask-set-model-default <model> [effort] — save the model, and optionally the
+# effort level, as what every new shell starts with; also applies here. An
+# omitted effort keeps whatever was already saved, and "default" drops it so
+# claude chooses. A shell that exports its own ASK_MODEL/ASK_EFFORT is
+# unaffected — the environment wins over the saved file.
+ask-set-model-default() {
+  _ai_check_args ask-set-model-default "$@" || return
+  # Base the effort on the saved file, not this shell, so an ad-hoc
+  # ask-set-model earlier in the session doesn't leak into the default.
+  _ai_read_defaults
+  local effort=$_ai_def_effort
+  case ${2:-} in
+    '') ;;
+    default) effort= ;;
+    *) effort=$2 ;;
+  esac
+  mkdir -p "$ASK_DIR" || return
+  {
+    printf 'model %s\n' "$1"
+    [ -n "$effort" ] && printf 'effort %s\n' "$effort"
+    :
+  } >| "$ASK_DIR/defaults" || return
+  export ASK_MODEL=$1
+  if [ -n "$effort" ]; then export ASK_EFFORT=$effort; else unset ASK_EFFORT; fi
+  _ai_show_model
+  printf 'saved as the default for new shells in %s\n' "$ASK_DIR/defaults"
+}
+
 # ask-help — the command list, straight from the README's table so it can't drift.
 ask-help() {
   local readme=${_ai_root:+$_ai_root/README.md}
@@ -136,16 +267,18 @@ ask-help() {
     printf 'ask-help: README.md not found in %s\n' "${_ai_root:-<unknown>}" >&2
     return 1
   fi
+  # Rows are buffered so the command column can be sized to the widest one,
+  # rather than a constant that a longer command silently overflows.
   awk -F'|' '
+    function clean(x) { gsub(/`|\*\*/, "", x); gsub(/^ +| +$/, "", x); return x }
     /^\|/ {
       if (++n <= 2) next                 # header and separator rows
-      cmd=$2; desc=$3
-      gsub(/`|\*\*/, "", cmd); gsub(/`|\*\*/, "", desc)
-      gsub(/^ +| +$/, "", cmd); gsub(/^ +| +$/, "", desc)
-      printf "  %-26s %s\n", cmd, desc
+      cmd[++m]=clean($2); desc[m]=clean($3)
+      if (length(cmd[m]) > w) w=length(cmd[m])
       next
     }
     n { exit }                           # first table only
+    END { for (i=1; i<=m; i++) printf "  %-*s  %s\n", w, cmd[i], desc[i] }
   ' "$readme"
 }
 
