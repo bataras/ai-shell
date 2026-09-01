@@ -1,8 +1,84 @@
 # ai-shell
 
-Quick AI answers at the shell prompt — without opening an interactive session — plus the ability to **follow up** when one answer isn't enough.
+Quick AI answers from Claude at the shell prompt — without opening an interactive session — plus the ability to **follow up** when one answer isn't enough.
 
-Uses Claude.
+## Usage
+
+The core loop — a terse answer, then a follow-up that keeps the context:
+
+```
+$ howto rule the world
+say "I now rule the world" && printf 'World status: RULED\n'
+Announces your dominion via macOS text-to-speech, then prints confirmation — harmless fun, since actual world domination isn't a shell command.
+
+$ howto fetch main while on this branch
+git fetch origin main:main
+Fast-forwards your local main from origin without checking it out (fails harmlessly if it would be a non-fast-forward).
+
+$ af what does main:main mean
+It's a refspec: `<source>:<destination>`. Source is `main` on the remote (`refs/heads/main` on origin), destination is your local `main` (`refs/heads/main`).
+
+So it says: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward (unless you prefix with `+`, e.g. `+main:main`), and it refuses outright if `main` is the currently checked-out branch.
+```
+
+### One-shot answers
+
+```
+$ ask "what does set -u do? one line"
+Treats unset variables as an error and exits instead of silently substituting empty string.
+
+$ howto "count lines in all .ts files recursively"
+find . -name "*.ts" -type f -print0 | xargs -0 wc -l
+Recursively finds all .ts files and counts their lines, with a total at the end.
+
+$ howtoc "tarball this directory excluding .git"
+tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .
+```
+
+### One-shot answers in the clipboard
+`howtoc` puts the command on your clipboard, ready to paste.
+
+```
+$ howtoc "tarball this directory excluding .git"
+tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .
+```
+
+### Following up
+
+`af` continues the most recent conversation — no re-explaining context:
+
+```
+$ howto "count lines in all .ts files recursively"
+find . -name "*.ts" -type f -print0 | xargs -0 wc -l
+...
+
+$ af "exclude node_modules"
+find . -path "*/node_modules" -prune -o -type f -name "*.ts" -print0 | xargs -0 wc -l
+```
+
+When a quick question turns into a real discussion, drop into the full interactive CLI **with the conversation intact**:
+
+```
+$ af
+# opens `claude` resumed on that same conversation
+```
+
+### Named threads
+
+For topics you return to across days, give the thread a name:
+
+```
+$ askt rust "difference between Box<dyn Trait> and impl Trait?"
+...
+
+$ askt rust "when would I prefer the Box version?"
+...
+
+$ askt          # list your threads
+rust
+```
+
+`af` follows up on whatever ran last, including an `askt` thread.
 
 Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.com/claude-code) CLI:
 
@@ -62,78 +138,6 @@ Re-running is safe (the block is replaced, not duplicated). Then open a new shel
 ~/.ai-shell/uninstall.sh --purge  # also deletes the ~/.ai-shell state directory
 rm -rf ~/.ai-shell                # remove everything: clone and state
 ```
-
-## Usage
-
-The core loop — a terse answer, then a follow-up that keeps the context:
-
-```
-$ howto rule the world
-say "I now rule the world" && printf 'World status: RULED\n'
-Announces your dominion via macOS text-to-speech, then prints confirmation — harmless fun, since actual world domination isn't a shell command.
-
-$ howto fetch main while on this branch
-git fetch origin main:main
-Fast-forwards your local main from origin without checking it out (fails harmlessly if it would be a non-fast-forward).
-
-$ af what does main:main mean
-It's a refspec: `<source>:<destination>`. Source is `main` on the remote (`refs/heads/main` on origin), destination is your local `main` (`refs/heads/main`).
-
-So it says: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward (unless you prefix with `+`, e.g. `+main:main`), and it refuses outright if `main` is the currently checked-out branch.
-```
-
-### One-shot answers
-
-```
-$ ask "what does set -u do? one line"
-Treats unset variables as an error and exits instead of silently substituting empty string.
-
-$ howto "count lines in all .ts files recursively"
-find . -name "*.ts" -type f -print0 | xargs -0 wc -l
-Recursively finds all .ts files and counts their lines, with a total at the end.
-
-$ howtoc "tarball this directory excluding .git"
-tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .
-```
-
-`howtoc` also puts the command on your clipboard, ready to paste.
-
-### Following up
-
-`af` continues the most recent conversation — no re-explaining context:
-
-```
-$ howto "count lines in all .ts files recursively"
-find . -name "*.ts" -type f -print0 | xargs -0 wc -l
-...
-
-$ af "exclude node_modules"
-find . -path "*/node_modules" -prune -o -type f -name "*.ts" -print0 | xargs -0 wc -l
-```
-
-When a quick question turns into a real discussion, drop into the full interactive CLI **with the conversation intact**:
-
-```
-$ af
-# opens `claude` resumed on that same conversation
-```
-
-### Named threads
-
-For topics you return to across days, give the thread a name:
-
-```
-$ askt rust "difference between Box<dyn Trait> and impl Trait?"
-...
-
-$ askt rust "when would I prefer the Box version?"
-...
-
-$ askt          # list your threads
-rust
-```
-
-`af` follows up on whatever ran last, including an `askt` thread.
 
 ## Updating
 
