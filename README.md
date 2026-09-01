@@ -4,7 +4,7 @@ Quick AI answers from Claude at the shell prompt — without opening an interact
 
 ## Usage
 
-The core loop — a terse answer, then a follow-up that keeps the context:
+### What's that command?
 
 ```
 $ howto rule the world
@@ -21,39 +21,32 @@ It's a refspec: `<source>:<destination>`. Source is `main` on the remote (`refs/
 So it says: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward (unless you prefix with `+`, e.g. `+main:main`), and it refuses outright if `main` is the currently checked-out branch.
 ```
 
-### One-shot answers
-
-```
-$ ask "what does set -u do? one line"
-Treats unset variables as an error and exits instead of silently substituting empty string.
-
-$ howto "count lines in all .ts files recursively"
-find . -name "*.ts" -type f -print0 | xargs -0 wc -l
-Recursively finds all .ts files and counts their lines, with a total at the end.
-
-$ howtoc "tarball this directory excluding .git"
-tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .
-```
-
-### One-shot answers in the clipboard
+### What's that command?.. in the clipboard
 `howtoc` puts the command on your clipboard, ready to paste.
 
 ```
 $ howtoc "tarball this directory excluding .git"
 tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .
+
+$ howtoc "count lines in all .ts files recursively"
+find . -name "*.ts" -type f -print0 | xargs -0 wc -l
 ```
 
-### Following up
-
+### One-shot answers with followups
 `af` continues the most recent conversation — no re-explaining context:
 
 ```
-$ howto "count lines in all .ts files recursively"
-find . -name "*.ts" -type f -print0 | xargs -0 wc -l
-...
+$ ask "what does set -u do? one line"
+Treats unset variables as an error and exits instead of silently substituting empty string.
 
-$ af "exclude node_modules"
-find . -path "*/node_modules" -prune -o -type f -name "*.ts" -print0 | xargs -0 wc -l
+$ ask when will AGI occur in one line
+Nobody knows — expert forecasts cluster loosely around 2030–2060, with wide error bars and no agreed definition of "AGI," so treat any specific date as marketing rather than prediction.
+
+$ ask ask what is the meaning of life, the universe and everything
+42
+
+$ af "are you sure?"
+Deep Thought spent 7.5 million years on it, so yes. The catch is nobody knows the question. 
 ```
 
 When a quick question turns into a real discussion, drop into the full interactive CLI **with the conversation intact**:
