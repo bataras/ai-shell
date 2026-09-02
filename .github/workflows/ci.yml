@@ -1,12 +1,9 @@
-name: release
+name: ci
 
-# Tag a commit to publish: git tag v0.1.0 && git push origin v0.1.0
 on:
   push:
-    tags: ['v*']
-
-permissions:
-  contents: write
+    branches: ['**']   # tags are covered by release.yml
+  pull_request:
 
 jobs:
   lint:
@@ -24,19 +21,9 @@ jobs:
       matrix:
         image: [debian:stable-slim, ubuntu:24.04]
     steps:
+      # A full clone: the test clones the checkout inside the container and
+      # runs ask-version against it.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - run: test/docker-install.sh "${{ matrix.image }}"
-
-  release:
-    needs: [lint, install]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Create release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
