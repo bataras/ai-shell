@@ -23,6 +23,11 @@ It's a refspec: `<source>:<destination>`. Source is `main` on the remote, destin
 So: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward.
 EOF
     ;;
+  *"is a symlink"*)
+    cat <<'EOF'
+A file whose contents are a path to another file — the kernel follows it on open. Unlike a hard link it can cross filesystems, and it dangles if the target goes away.
+EOF
+    ;;
   *tarball*)
     cat <<'EOF'
 tar --exclude='./.git' -czf "../${PWD##*/}.tar.gz" .

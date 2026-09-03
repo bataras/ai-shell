@@ -8,7 +8,7 @@ Output demo/demo.gif
 Set Shell zsh
 Set FontSize 15
 Set Width 900
-Set Height 700
+Set Height 745
 Set Padding 16
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 40ms
@@ -30,6 +30,11 @@ Type "af what does main:main mean"
 Sleep 400ms
 Enter
 Sleep 4.2s
+
+Type "wtf is a symlink"
+Sleep 400ms
+Enter
+Sleep 2.6s
 
 Type "howtoc tarball this directory excluding .git"
 Sleep 400ms
