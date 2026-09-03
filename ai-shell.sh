@@ -161,6 +161,15 @@ wtf() {
 # howto <task> — the command line for a task, plus one explanation line.
 howto() { _ask_send - "$ASK_SYS_CMD" howto "$*"; }
 
+# htf <task> — howto, with "how " already typed: `htf do I squash commits`.
+htf() {
+  if [ $# -eq 0 ]; then
+    printf 'usage: htf <task>\n' >&2
+    return 2
+  fi
+  howto "how $*"
+}
+
 # howtoc <task> — the command line only, echoed and copied to the clipboard.
 howtoc() {
   local out
