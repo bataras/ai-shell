@@ -133,6 +133,7 @@ Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.
 | Command | What it does |
 |---|---|
 | `ask <question>` | Terse general answer; starts a fresh conversation |
+| `wtf <question>` | `ask` with "what " already typed: `wtf is a symlink` |
 | `howto <task>` | The command line for a task, plus one explanation line |
 | `howtoc <task>` | The command line **only**, echoed and copied to your clipboard |
 | `af <question>` | **Follow up** on the last answer, whichever command produced it |

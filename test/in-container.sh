@@ -26,7 +26,7 @@ has() { if grep -qF -- "$3" "$2" 2>/dev/null; then ok "$1"; else bad "$1"; fi; }
 section() { printf '\n--- %s\n' "$1"; }
 
 marker='# >>> ai-shell >>>'
-fns='ask howto howtoc af askt ask-model ask-set-model ask-set-model-default ask-version ask-update ask-help'
+fns='ask wtf howto howtoc af askt ask-model ask-set-model ask-set-model-default ask-version ask-update ask-help'
 
 # Everything runs as root in a container, with HOME=/root.
 export HOME=/root
@@ -72,7 +72,15 @@ t 'an interactive bash loads ai-shell' \
 t 'every command is defined' \
   'bash -c ". /root/ai-shell/ai-shell.sh; for f in '"$fns"'; do typeset -f \$f >/dev/null || exit 1; done"'
 t 'ask-help lists every command' \
-  '[ "$(bash -c ". /root/ai-shell/ai-shell.sh; ask-help" | wc -l)" -eq 13 ]'
+  '[ "$(bash -c ". /root/ai-shell/ai-shell.sh; ask-help" | wc -l)" -eq 14 ]'
+# A stub _ask_send keeps this about the wording wtf builds, not about claude.
+got=$(bash -c '. /root/ai-shell/ai-shell.sh; _ask_send() { shift 3; printf "%s" "$*"; }; wtf is a symlink' 2>/dev/null)
+[ "$got" = "what is a symlink" ] && ok 'wtf prepends "what " to the question' \
+                                || bad "wtf built the wrong question: $got"
+bash -c '. /root/ai-shell/ai-shell.sh; wtf' >/dev/null 2>&1
+[ $? -eq 2 ] && ok 'wtf with no question exits 2' \
+             || bad 'wtf with no question should exit 2'
+
 t 'ask-model stars the default model' \
   'bash -c ". /root/ai-shell/ai-shell.sh; ask-model" | grep -q "^  \* opus"'
 t 'ask-set-model switches model and effort' \

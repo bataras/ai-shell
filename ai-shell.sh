@@ -149,6 +149,15 @@ _ask_send() {
 # Read-only: it can look at the filesystem but never changes it.
 ask() { _ask_send - "$ASK_SYS_CHAT" ask "$*"; }
 
+# wtf <question> — ask, with "what " already typed: `wtf is a symlink`.
+wtf() {
+  if [ $# -eq 0 ]; then
+    printf 'usage: wtf <question>\n' >&2
+    return 2
+  fi
+  ask "what $*"
+}
+
 # howto <task> — the command line for a task, plus one explanation line.
 howto() { _ask_send - "$ASK_SYS_CMD" howto "$*"; }
 
