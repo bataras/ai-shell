@@ -12,7 +12,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install zsh
         run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
       - run: test/lint.sh
@@ -24,7 +24,7 @@ jobs:
       matrix:
         image: [debian:stable-slim, ubuntu:24.04]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - run: test/docker-install.sh "${{ matrix.image }}"
@@ -33,7 +33,7 @@ jobs:
     needs: [lint, install]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Create release
