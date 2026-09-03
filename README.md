@@ -133,7 +133,9 @@ Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.
 | Command | What it does |
 |---|---|
 | `ask <question>` | Terse general answer; starts a fresh conversation |
+| `wtf <question>` | `ask` with "what " already typed: `wtf is a symlink` |
 | `howto <task>` | The command line for a task, plus one explanation line |
+| `htf <task>` | `howto` with "how " already typed: `htf do I squash commits` |
 | `howtoc <task>` | The command line **only**, echoed and copied to your clipboard |
 | `af <question>` | **Follow up** on the last answer, whichever command produced it |
 | `af` (no args) | Open the last conversation in the full interactive `claude` CLI |
@@ -153,8 +155,13 @@ Every one-shot quietly keeps its conversation, so a terse answer can always be e
 - **zsh or bash**
 - the **`claude` CLI** installed and logged in ([install instructions](https://code.claude.com/docs/en/quickstart))
 - **git** (the install is a clone; `ask-update` uses it)
-- macOS or Linux; `uuidgen` (preinstalled on macOS, `util-linux` on Linux)
+- macOS or Linux. Conversation ids come from `uuidgen`, or from
+  `/proc/sys/kernel/random/uuid` where there's no `uuidgen` — so on Linux
+  nothing extra is needed
 - for `howtoc`'s clipboard: `pbcopy` (macOS) or `wl-copy`/`xclip`/`xsel` (Linux)
+
+`install.sh --check` reports on all of this without touching a thing, so you can
+run it any time to see what's missing.
 
 ## Install
 
@@ -169,7 +176,36 @@ The installer appends a marker-guarded block to your rc file that sources `ai-sh
 ~/.ai-shell/install.sh --zsh    # ~/.zshrc (respects $ZDOTDIR)
 ~/.ai-shell/install.sh --bash   # ~/.bashrc
 ~/.ai-shell/install.sh --all    # both
+~/.ai-shell/install.sh --check  # only report on prerequisites; change nothing
 ```
+
+Where `$SHELL` says nothing useful — a container, `env -i`, cron — the installer
+falls back to whichever of zsh/bash is actually installed, and asks for a flag
+only when both are.
+
+It installs no software of its own: anything missing (the `claude` CLI, git, a
+clipboard tool) is reported afterwards with the command that fixes it.
+
+### Debian / Ubuntu
+
+A stock image has none of the prerequisites, not even git. Start with them:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y git curl ca-certificates
+curl -fsSL https://claude.ai/install.sh | bash    # installs ~/.local/bin/claude
+claude                                            # log in
+```
+
+That installer doesn't put `~/.local/bin` on your `PATH`, and Debian and Ubuntu
+don't either, so add it above the ai-shell block in your rc file:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Then clone and install as above. Optional extras: `xclip` (or `wl-clipboard`)
+for `howtoc`'s clipboard, `zsh` if you'd rather use it than bash.
 
 `~/.ai-shell` holds everything — the code and your conversation state (the state
 files are gitignored, so updates stay clean).
@@ -225,11 +261,28 @@ ASK_MODEL=sonnet ask "quick one: default ssh port?"
 
 **ai-shell is read-only — it never mutates anything.** One-shots do get a shell so they can *look* (`ask list the current folder` actually lists it), but it runs under claude's `plan` permission mode, which mechanically denies any mutating command — this is enforced, not just prompted. Anything state-changing you ask for is printed for you to run yourself. The functions also pass `--safe-mode`, so none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast and cheap. `af` with no arguments opens a normal interactive session with your full setup, including its normal ability to act.
 
+## Testing
+
+```sh
+test/lint.sh                      # syntax under sh/bash/zsh; every command defined
+test/docker-install.sh            # full install in debian:stable-slim + ubuntu:24.04
+test/docker-install.sh debian:12  # or any image you name
+```
+
+`docker-install.sh` starts from a stock image — no git, no curl, no `claude`, no
+`$SHELL` — and checks that the installer copes and says what's missing, then
+installs the prerequisites the way the README does and checks the result comes
+out clean under both bash and zsh. `AI_SHELL_TEST_OFFLINE=1` stops after the
+first phase, which needs no network. The one thing it can't cover is an actual
+answer from `claude`: that needs a logged-in account.
+
+Both run in CI on every push (`.github/workflows/ci.yml`).
+
 ## Releasing
 
-Pushing a `v*` tag triggers `.github/workflows/release.yml`, which syntax-checks
-the scripts under bash, zsh, and sh, confirms every command is defined in both
-shells, and then publishes a GitHub release with auto-generated notes.
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which runs the same
+lint and container installs, then publishes a GitHub release with auto-generated
+notes.
 
 ```sh
 git tag v0.1.0

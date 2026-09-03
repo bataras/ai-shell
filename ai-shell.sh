@@ -71,6 +71,21 @@ ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_
 ASK_SYS_CMD="Output shell command lines only, for $_ai_os / $_ai_shell. Print the single best command line for the task, then one short explanation line. No markdown fences, no preamble. $ASK_SYS_REFUSE"
 ASK_SYS_CMDONLY="Print ONLY the command line, for $_ai_os / $_ai_shell. One line. No explanation, no markdown, no backticks. $ASK_SYS_REFUSE"
 
+# _ai_need_claude — the CLI every command fronts. The official installer drops
+# it in ~/.local/bin, which plenty of distros leave off PATH, so that case gets
+# its own message rather than a bare "not found".
+_ai_need_claude() {
+  command -v claude >/dev/null 2>&1 && return 0
+  if [ -x "$HOME/.local/bin/claude" ]; then
+    printf 'ai-shell: `claude` is at ~/.local/bin/claude but not on your PATH\n' >&2
+    printf '  add to your rc file:  export PATH="$HOME/.local/bin:$PATH"\n' >&2
+  else
+    printf 'ai-shell: `claude` CLI not found — install Claude Code first\n' >&2
+    printf '  curl -fsSL https://claude.ai/install.sh | bash\n' >&2
+  fi
+  return 1
+}
+
 _ai_uuid() {
   if command -v uuidgen >/dev/null 2>&1; then
     uuidgen | tr '[:upper:]' '[:lower:]'
@@ -111,10 +126,7 @@ _ask_send() {
     printf 'usage: %s <question>\n' "$name" >&2
     return 2
   fi
-  command -v claude >/dev/null 2>&1 || {
-    printf 'ai-shell: `claude` CLI not found — install Claude Code first\n' >&2
-    return 127
-  }
+  _ai_need_claude || return 127
   mkdir -p "$ASK_DIR/threads"
   local sid out
   local -a sess
@@ -137,8 +149,26 @@ _ask_send() {
 # Read-only: it can look at the filesystem but never changes it.
 ask() { _ask_send - "$ASK_SYS_CHAT" ask "$*"; }
 
+# wtf <question> — ask, with "what " already typed: `wtf is a symlink`.
+wtf() {
+  if [ $# -eq 0 ]; then
+    printf 'usage: wtf <question>\n' >&2
+    return 2
+  fi
+  ask "what $*"
+}
+
 # howto <task> — the command line for a task, plus one explanation line.
 howto() { _ask_send - "$ASK_SYS_CMD" howto "$*"; }
+
+# htf <task> — howto, with "how " already typed: `htf do I squash commits`.
+htf() {
+  if [ $# -eq 0 ]; then
+    printf 'usage: htf <task>\n' >&2
+    return 2
+  fi
+  howto "how $*"
+}
 
 # howtoc <task> — the command line only, echoed and copied to the clipboard.
 howtoc() {
@@ -157,6 +187,7 @@ af() {
     return 1
   }
   sid=$(<"$ASK_DIR/current") || return
+  _ai_need_claude || return 127
   if [ $# -eq 0 ]; then
     claude --resume "$sid"
     return
