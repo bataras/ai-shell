@@ -26,7 +26,7 @@ has() { if grep -qF -- "$3" "$2" 2>/dev/null; then ok "$1"; else bad "$1"; fi; }
 section() { printf '\n--- %s\n' "$1"; }
 
 marker='# >>> ai-shell >>>'
-fns='ask wtf howto htf howtoc af askt ask-model ask-set-model ask-set-model-default ask-version ask-update ask-help'
+fns='ask wtf howto htf howtoc askf askt ask-model ask-set-model ask-set-model-default ask-version ask-update ask-help'
 
 # Everything runs as root in a container, with HOME=/root.
 export HOME=/root

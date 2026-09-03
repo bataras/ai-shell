@@ -26,7 +26,7 @@ Sleep 400ms
 Enter
 Sleep 3.2s
 
-Type "af what does main:main mean"
+Type "askf what does main:main mean"
 Sleep 400ms
 Enter
 Sleep 4.2s
@@ -59,7 +59,7 @@ Sleep 400ms
 Enter
 Sleep 2.4s
 
-Type `af "are you sure?"`
+Type `askf "are you sure?"`
 Sleep 400ms
 Enter
 Sleep 3s

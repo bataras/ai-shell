@@ -17,7 +17,7 @@ $ howto fetch main while on this branch
 git fetch origin main:main
 Fast-forwards your local main from origin without checking it out (fails harmlessly if it would be a non-fast-forward).
 
-$ af what does main:main mean
+$ askf what does main:main mean
 It's a refspec: `<source>:<destination>`. Source is `main` on the remote (`refs/heads/main` on origin), destination is your local `main` (`refs/heads/main`).
 
 So it says: fetch origin's main and write it directly into your local main ref, instead of only updating `origin/main`. Git refuses if the update isn't a fast-forward (unless you prefix with `+`, e.g. `+main:main`), and it refuses outright if `main` is the currently checked-out branch.
@@ -35,7 +35,7 @@ find . -name "*.ts" -type f -print0 | xargs -0 wc -l
 ```
 
 ### One-shot answers with followups
-`af` continues the most recent conversation — no re-explaining context:
+`askf` continues the most recent conversation — no re-explaining context:
 
 ```
 $ ask "what does set -u do? one line"
@@ -47,14 +47,14 @@ Nobody knows — expert forecasts cluster loosely around 2030–2060, with wide 
 $ ask what is the meaning of life, the universe and everything
 42
 
-$ af "are you sure?"
+$ askf "are you sure?"
 Deep Thought spent 7.5 million years on it, so yes. The catch is nobody knows the question. 
 ```
 
 When a quick question turns into a real discussion, drop into the full interactive CLI **with the conversation intact**:
 
 ```
-$ af
+$ askf
 # opens `claude` resumed on that same conversation
 ```
 
@@ -126,19 +126,19 @@ $ askt          # list your threads
 rust
 ```
 
-`af` follows up on whatever ran last, including an `askt` thread.
+`askf` follows up on whatever ran last, including an `askt` thread.
 
 Small shell functions (zsh and bash) on top of the [Claude Code](https://claude.com/claude-code) CLI:
 
 | Command | What it does |
 |---|---|
+| `howto <task>` | The command line for a task, plus one explanation line |
+| `howtoc <task>` | The command line **only**, echoed and copied to your clipboard |
 | `ask <question>` | Terse general answer; starts a fresh conversation |
 | `wtf <question>` | `ask` with "what " already typed: `wtf is a symlink` |
-| `howto <task>` | The command line for a task, plus one explanation line |
 | `htf <task>` | `howto` with "how " already typed: `htf do I squash commits` |
-| `howtoc <task>` | The command line **only**, echoed and copied to your clipboard |
-| `af <question>` | **Follow up** on the last answer, whichever command produced it |
-| `af` (no args) | Open the last conversation in the full interactive `claude` CLI |
+| `askf <question>` | **Follow up** on the last answer, whichever command produced it |
+| `askf` (no args) | Open the last conversation in the full interactive `claude` CLI |
 | `askt <name> <question>` | Ask in a named, long-lived thread (created on first use) |
 | `askt` (no args) | List named threads, most recently used first |
 | `ask-model` | List the models and effort levels available, marking the ones in use |
@@ -259,7 +259,7 @@ Environment variables, settable per-invocation or exported:
 ASK_MODEL=sonnet ask "quick one: default ssh port?"
 ```
 
-**ai-shell is read-only — it never mutates anything.** One-shots do get a shell so they can *look* (`ask list the current folder` actually lists it), but it runs under claude's `plan` permission mode, which mechanically denies any mutating command — this is enforced, not just prompted. Anything state-changing you ask for is printed for you to run yourself. The functions also pass `--safe-mode`, so none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast and cheap. `af` with no arguments opens a normal interactive session with your full setup, including its normal ability to act.
+**ai-shell is read-only — it never mutates anything.** One-shots do get a shell so they can *look* (`ask list the current folder` actually lists it), but it runs under claude's `plan` permission mode, which mechanically denies any mutating command — this is enforced, not just prompted. Anything state-changing you ask for is printed for you to run yourself. The functions also pass `--safe-mode`, so none of your local Claude Code customizations (CLAUDE.md, hooks, MCP servers) load — answers are fast and cheap. `askf` with no arguments opens a normal interactive session with your full setup, including its normal ability to act.
 
 ## Testing
 

@@ -6,7 +6,7 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
 
-fns='ask wtf howto htf howtoc af askt ask-model ask-set-model ask-set-model-default ask-version ask-update ask-help'
+fns='ask wtf howto htf howtoc askf askt ask-model ask-set-model ask-set-model-default ask-version ask-update ask-help'
 status=0
 say() { printf '%s\n' "$1"; }
 

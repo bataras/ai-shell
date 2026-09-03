@@ -63,7 +63,7 @@ unset _ai_self
 #
 # Catastrophe refusal, shared by every one-shot.
 ASK_SYS_REFUSE="If the requested command would be catastrophically destructive (delete the root directory, wipe a disk, fork bomb, and the like), do not print it; answer exactly: fuck you. I won't do that."
-# ask/af/askt: shell allowed, strictly read-only.
+# ask/askf/askt: shell allowed, strictly read-only.
 ASK_SYS_RO="You may run shell commands when they help answer, but keep them strictly read-only: inspect, never modify the filesystem or system state (mutating commands are blocked regardless). If the user asks to change state (create, write, delete, move, install, kill), print the command for them to run instead of running it — no mention of modes, permissions, or why; just the command. $ASK_SYS_REFUSE"
 
 ASK_SYS_CHAT="Terse, direct answers for an expert engineer at a shell prompt ($_ai_os, $_ai_shell). No preamble, no markdown fences, no restating the question. Commands on their own line. A few sentences at most unless asked to expand. $ASK_SYS_RO"
@@ -119,7 +119,7 @@ _ai_flags() {
 
 # _ask_send <thread-file|-> <system-prompt> <usage-name> <prompt...>
 # "-" = anonymous thread (fresh conversation). Either way the conversation
-# becomes "current", so `af` can follow up on it.
+# becomes "current", so `askf` can follow up on it.
 _ask_send() {
   local f=$1 sys=$2 name=$3; shift 3
   if [ -z "$*" ]; then
@@ -178,12 +178,12 @@ howtoc() {
   printf '%s' "$out" | _ai_copy
 }
 
-# af [question] — follow up on the last answer (from ask/howto/howtoc/askt).
+# askf [question] — follow up on the last answer (from ask/howto/howtoc/askt).
 # With no arguments, opens that conversation in the full interactive claude CLI.
-af() {
+askf() {
   local sid out
   [ -s "$ASK_DIR/current" ] || {
-    printf 'af: nothing to follow up on yet\n' >&2
+    printf 'askf: nothing to follow up on yet\n' >&2
     return 1
   }
   sid=$(<"$ASK_DIR/current") || return
